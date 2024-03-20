@@ -31,7 +31,7 @@ const Rotation = require('./rotation')
  *
  * @constructor
  */
-function GrantManager (config) {
+function GrantManager(config) {
   this.realmUrl = config.realmUrl
   this.clientId = config.clientId
   this.secret = config.secret
@@ -57,7 +57,7 @@ function GrantManager (config) {
  * @param {String} password The cleartext password.
  * @param {Function} callback Optional callback, if not using promises.
  */
-GrantManager.prototype.obtainDirectly = function obtainDirectly (username, password,
+GrantManager.prototype.obtainDirectly = function obtainDirectly(username, password,
   callback, scopeParam) {
   const params = {
     client_id: this.clientId,
@@ -89,7 +89,7 @@ GrantManager.prototype.obtainDirectly = function obtainDirectly (username, passw
  * @param {String} sessionHost Optional session host for targetted Keycloak console post-backs.
  * @param {Function} callback Optional callback, if not using promises.
  */
-GrantManager.prototype.obtainFromCode = function obtainFromCode (request, code, sessionId, sessionHost, callback) {
+GrantManager.prototype.obtainFromCode = function obtainFromCode(request, code, sessionId, sessionHost, callback) {
   const params = {
     client_session_state: sessionId,
     client_session_host: sessionHost,
@@ -104,7 +104,7 @@ GrantManager.prototype.obtainFromCode = function obtainFromCode (request, code, 
   return nodeify(fetch(this, handler, options, params), callback)
 }
 
-GrantManager.prototype.checkPermissions = function obtainPermissions (authzRequest, request, callback) {
+GrantManager.prototype.checkPermissions = function obtainPermissions(authzRequest, request, callback) {
   const params = {
     grant_type: 'urn:ietf:params:oauth:grant-type:uma-ticket'
   }
@@ -203,7 +203,7 @@ GrantManager.prototype.checkPermissions = function obtainPermissions (authzReque
  *
  * @param {Function} callback Optional callback, if not using promises.
  */
-GrantManager.prototype.obtainFromClientCredentials = function obtainFromlientCredentials (callback, scopeParam) {
+GrantManager.prototype.obtainFromClientCredentials = function obtainFromlientCredentials(callback, scopeParam) {
   const params = {
     grant_type: 'client_credentials',
     scope: scopeParam || 'openid',
@@ -232,7 +232,7 @@ GrantManager.prototype.obtainFromClientCredentials = function obtainFromlientCre
  * @param {Grant} grant The grant object to ensure freshness of.
  * @param {Function} callback Optional callback if promises are not used.
  */
-GrantManager.prototype.ensureFreshness = function ensureFreshness (grant, callback) {
+GrantManager.prototype.ensureFreshness = function ensureFreshness(grant, callback) {
   if (!grant.isExpired()) {
     return nodeify(Promise.resolve(grant), callback)
   }
@@ -264,7 +264,7 @@ GrantManager.prototype.ensureFreshness = function ensureFreshness (grant, callba
  *
  * @return {boolean} `false` if the token is invalid, or the same token if valid.
  */
-GrantManager.prototype.validateAccessToken = function validateAccessToken (token, callback) {
+GrantManager.prototype.validateAccessToken = function validateAccessToken(token, callback) {
   let t = token
   if (typeof token === 'object') {
     t = token.token
@@ -280,7 +280,7 @@ GrantManager.prototype.validateAccessToken = function validateAccessToken (token
   return nodeify(fetch(this, handler, options, params), callback)
 }
 
-GrantManager.prototype.userInfo = function userInfo (token, callback) {
+GrantManager.prototype.userInfo = function userInfo(token, callback) {
   const url = this.realmUrl + '/protocol/openid-connect/userinfo'
   const options = URL.parse(url); // eslint-disable-line
   options.method = 'GET'
@@ -314,12 +314,12 @@ GrantManager.prototype.userInfo = function userInfo (token, callback) {
   return nodeify(promise, callback)
 }
 
-GrantManager.prototype.getAccount = function getAccount () {
+GrantManager.prototype.getAccount = function getAccount() {
   console.error('GrantManager#getAccount is deprecated. See GrantManager#userInfo')
   return this.userInfo.apply(this, arguments)
 }
 
-GrantManager.prototype.isGrantRefreshable = function isGrantRefreshable (grant) {
+GrantManager.prototype.isGrantRefreshable = function isGrantRefreshable(grant) {
   return !this.bearerOnly && (grant && grant.refresh_token)
 }
 
@@ -334,7 +334,7 @@ GrantManager.prototype.isGrantRefreshable = function isGrantRefreshable (grant) 
  * @param {String} rawData The raw JSON string received from the Keycloak server or from a client.
  * @return {Promise} A promise reoslving a grant.
  */
-GrantManager.prototype.createGrant = function createGrant (rawData) {
+GrantManager.prototype.createGrant = function createGrant(rawData) {
   let grantData = rawData
   if (typeof rawData !== 'object') grantData = JSON.parse(grantData)
 
@@ -372,11 +372,11 @@ GrantManager.prototype.createGrant = function createGrant (rawData) {
  * @return {Promise} That resolves to a validated grant or
  * rejects with an error if any of the tokens are invalid.
  */
-GrantManager.prototype.validateGrant = function validateGrant (grant) {
+GrantManager.prototype.validateGrant = function validateGrant(grant) {
   const self = this
   const validateGrantToken = (grant, tokenName, expectedType) => {
     return new Promise((resolve, reject) => {
-    // check the access token
+      // check the access token
       this.validateToken(grant[tokenName], expectedType).then(token => {
         grant[tokenName] = token
         resolve()
@@ -412,7 +412,7 @@ GrantManager.prototype.validateGrant = function validateGrant (grant) {
  *
  * @return {Promise} That resolve a token
  */
-GrantManager.prototype.validateToken = function validateToken (token, expectedType) {
+GrantManager.prototype.validateToken = function validateToken(token, expectedType) {
   return new Promise((resolve, reject) => {
     if (!token) {
       reject(new Error('invalid token (missing)'))
@@ -519,12 +519,14 @@ const fetch = (manager, handler, options, params) => {
     options.headers['Content-Length'] = data.length
 
     const req = getProtocol(options).request(options, (response) => {
-      if (response.statusCode < 200 || response.statusCode > 299) {
-        return reject(new Error(response.statusCode + ':' + http.STATUS_CODES[response.statusCode]))
-      }
+
       let json = ''
       response.on('data', (d) => (json += d.toString()))
       response.on('end', () => {
+        console.log({ json })
+        if (response.statusCode < 200 || response.statusCode > 299) {
+          return reject(new Error(response.statusCode + ':' + http.STATUS_CODES[response.statusCode]))
+        }
         handler(resolve, reject, json)
       })
     })

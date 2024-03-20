@@ -15,7 +15,7 @@
  */
 'use strict'
 
-function handlePermissions (permissions, callback) {
+function handlePermissions(permissions, callback) {
   for (let i = 0; i < permissions.length; i++) {
     const expected = permissions[i].split(':')
     const resource = expected[0]
@@ -42,7 +42,7 @@ function handlePermissions (permissions, callback) {
  *
  * @constructor
  */
-function Enforcer (keycloak, config) {
+function Enforcer(keycloak, config) {
   this.keycloak = keycloak
   this.config = config || {}
 
@@ -55,7 +55,7 @@ function Enforcer (keycloak, config) {
   }
 }
 
-Enforcer.prototype.enforce = function enforce (expectedPermissions) {
+Enforcer.prototype.enforce = function enforce(expectedPermissions) {
   const keycloak = this.keycloak
   const config = this.config
 
@@ -64,6 +64,7 @@ Enforcer.prototype.enforce = function enforce (expectedPermissions) {
   }
 
   return function (request, response, next) {
+    console.log("authorization middleware")
     if (!expectedPermissions || expectedPermissions.length === 0) {
       return next()
     }
@@ -133,8 +134,10 @@ Enforcer.prototype.enforce = function enforce (expectedPermissions) {
           return next()
         }
 
+        console.log("@")
         return keycloak.accessDenied(request, response, next)
-      }).catch(function () {
+      }).catch(function (error) {
+        console.log("AD:", error)
         return keycloak.accessDenied(request, response, next)
       })
     } else if (config.response_mode === 'token') {
